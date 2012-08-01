@@ -11,7 +11,8 @@ WaveMessageEmbedder::WaveMessageEmbedder(char * m, unsigned int mSize, unsigned 
     unsigned int cnt;
     mByteCount = mSize;
     cByteCount = cSize;
-    std::string sm (m);
+	if(mSize != 0)
+		std::string sm (m,mSize);
     current = 0;
     lsb_bits = 0;
 
@@ -216,7 +217,7 @@ void WaveMessageEmbedder::embed(unsigned int b,unsigned int n)
 		changeSample = 0;       
     }
      
-	cout << "averages " << average_lsb << " " << average_rsb << endl ;
+	//cout << "averages " << average_lsb << " " << average_rsb << endl ;
 
     current += 2 * n;
     //unsigned int averageandgetlsbs(int d,unsigned int e,unsigned int f,unsigned int g);
@@ -231,7 +232,7 @@ BYTE * WaveMessageEmbedder::getStegoData(unsigned int bitsPerSample,unsigned int
 	//unsigned int i;
 	int net = cByteCount / noOfBytesToAverage;
 	net = net * noOfBytesToAverage;
-	cout << " condition in embed loop : " << (current * 2 < net && message.size() > 0);
+	//cout << " condition in embed loop : " << (current * 2 < net && message.size() > 0);
     while( current * 2 < net && !message.empty() )
         embed(bitsPerSample,noOfBytesToAverage);
 	BYTE * bCover = new BYTE [cByteCount]();
@@ -261,7 +262,7 @@ void WaveMessageEmbedder::extract(unsigned int b,unsigned int n)
     unsigned int average_lsb = getlsb(b,averageNLeftSamples(n));
 	unsigned int average_rsb = getlsb(b,averageNRightSamples(n));
     std::vector<unsigned int> temp;
-    cout<< "\non extraction: average_lsb = " << average_lsb << "current = " << current <<endl ;
+    //cout<< "\non extraction: average_lsb = " << average_lsb << "current = " << current <<endl ;
     unsigned int i;
 	
     for(i = currentbits ; i < currentbits + b; i ++)
@@ -297,6 +298,9 @@ void WaveMessageEmbedder::extract(unsigned int b,unsigned int n)
 
 }
 
+unsigned int WaveMessageEmbedder::getExtractedSize(){
+return message.size()/8 - 4;
+}
 
 
 BYTE * WaveMessageEmbedder::getExtractedData(unsigned int bitsPerSample,unsigned int noOfBytesToAverage)
@@ -309,9 +313,9 @@ BYTE * WaveMessageEmbedder::getExtractedData(unsigned int bitsPerSample,unsigned
     currentbits = 0;
 	//extractSize();
 
-    while(current < cByteCount/2/* ||  (current/noOfBytesToAverage) *bitsPerSample < mByteCount * 8 - 32) &&  retrievedSize == false*/ )
+    while((current < cByteCount/2 && currentbits < (mByteCount + 4) * 8) || retrievedSize == false) /* ||  (current/noOfBytesToAverage) *bitsPerSample < mByteCount * 8 - 32) &&  retrievedSize == false*/ 
 	{
-		cout << mByteCount << " is my mByteCount" << endl;
+	//	cout << mByteCount << " is my mByteCount" << endl;
 		if(retrievedSize == false && message.size() >= 32)
 		{
 			extractSize();
@@ -320,22 +324,21 @@ BYTE * WaveMessageEmbedder::getExtractedData(unsigned int bitsPerSample,unsigned
 		}	
         extract(bitsPerSample,noOfBytesToAverage);
 	}
-	cout << "mByteCount is " << mByteCount << "current is " << current << endl;
+	//cout << "mByteCount is " << mByteCount << "current is " << current << endl;
 	
     //convert message to BYTE *
-	BYTE * out;
+	BYTE * out; //should move to fields and free on destruct
 	unsigned int i = 0,j=0;
-	out = new BYTE [mByteCount];
+	out = new BYTE [message.size()/8 - 4];
 
 	
-	while(i < mByteCount)
+	while(i < message.size()/8 - 4)
 	//while(i < (message.size()/8));
 	{
 		out[i] = 0;
 		while(j < 8)
 		{
-			//cout << i << " is out " << j << "is in. " << pow(message[32 + i*8 + j],j)<<endl;
-			
+			cout << i << " is out " << j << "is in. " << pow(message[32 + i*8 + j],j)<<endl;
 			out[i] += message[32 + i*8 + j]<<(7-j);
 			j++;
 		}
