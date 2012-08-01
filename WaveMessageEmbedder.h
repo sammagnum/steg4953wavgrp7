@@ -19,7 +19,7 @@ typedef unsigned long DWORD;
 class WaveMessageEmbedder
 {
 private:
-    std::vector<bool> message;
+    std::vector<char> message;
     unsigned short * cover;
     unsigned int lsb_bits;
     //std::vector<BYTE> extractm;
@@ -29,8 +29,10 @@ private:
     long long currentbits;
     //std::vector<int> sampleVector;
     void embed(unsigned int b,unsigned int n);
-
+	void prependSize(unsigned int size);
+	void extractSize();
     void setMessageByte(BYTE val);
+	
     void setCoverByte(BYTE val,BYTE hival,unsigned int cnt);
     unsigned int averageNLeftSamples(unsigned int n);
     unsigned int getlsb(unsigned int b,unsigned int value);
