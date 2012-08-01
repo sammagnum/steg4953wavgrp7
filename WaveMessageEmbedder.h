@@ -22,6 +22,7 @@ private:
     std::vector<char> message;
     unsigned short * cover;
     unsigned int lsb_bits;
+	void convertCoverToBYTE(BYTE  * bCover);
     //std::vector<BYTE> extractm;
     DWORD mByteCount;
     DWORD cByteCount;

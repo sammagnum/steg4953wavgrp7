@@ -227,15 +227,33 @@ void WaveMessageEmbedder::embed(unsigned int b,unsigned int n)
 BYTE * WaveMessageEmbedder::getStegoData(unsigned int bitsPerSample,unsigned int noOfBytesToAverage)
 {
     lsb_bits = bitsPerSample;
+	unsigned int i;
 	int net = cByteCount / noOfBytesToAverage;
 	net = net * noOfBytesToAverage;
 	cout << " condition in embed loop : " << (current * 2 < net && message.size() > 0);
     while( current * 2 < net && !message.empty() )
         embed(bitsPerSample,noOfBytesToAverage);
-    //convert cover to BYTE
-    return 0;
+	BYTE * bCover = new BYTE [cByteCount]();
+    convertCoverToBYTE(bCover);
+	/*for( i = 0; i < cByteCount/2; i++ )
+	{
+		cout << "orig: " << cover[ i] << "copy: "<<(short)( bCover[2 * i] + 256 * bCover[2 * i+1]) << endl;
+	}
+	*/
+	
+	return bCover;
 }
 
+
+void WaveMessageEmbedder::convertCoverToBYTE(BYTE  * bCover)
+{
+	unsigned int i;
+	for( i = 0; i < cByteCount/2; i++ )
+	{
+		bCover[2 * i] = cover[ i] & 0xFF;
+		bCover[2*i + 1] = cover[i] >> 8;
+	}
+}	
 void WaveMessageEmbedder::extract(unsigned int b,unsigned int n)
 {
 
@@ -326,14 +344,14 @@ BYTE * WaveMessageEmbedder::getExtractedData(unsigned int bitsPerSample,unsigned
 	}
 	
 
-	cout << "out: " << message.size() << endl;
+	/*cout << "out: " << message.size() << endl;
 	for(i =0; i < message.size() / 8 -4;i++)
 	{
 		printf("%c ",out[i]);
 	
 	}
-	cout << endl;
-    return 0;
+	cout << endl;*/
+    return out;
 }
 
 void WaveMessageEmbedder::extractSize()
