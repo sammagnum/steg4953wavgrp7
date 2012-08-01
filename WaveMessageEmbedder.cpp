@@ -6,7 +6,7 @@ using std::cout;
 using std::endl;
 
 
-WaveMessageEmbedder::WaveMessageEmbedder(char * m, unsigned int mSize, BYTE * c, DWORD cSize)
+WaveMessageEmbedder::WaveMessageEmbedder(char * m, unsigned int mSize, unsigned char * c, unsigned long cSize)
 {
     unsigned int cnt;
     mByteCount = mSize;
@@ -20,6 +20,7 @@ WaveMessageEmbedder::WaveMessageEmbedder(char * m, unsigned int mSize, BYTE * c,
     //message = new std::vector<bool>;
 	message.clear();
 	prependSize(mSize);
+	
     for( cnt = 0 ; cnt < mSize; cnt++)
         setMessageByte(m[cnt]);
     
@@ -227,7 +228,7 @@ void WaveMessageEmbedder::embed(unsigned int b,unsigned int n)
 BYTE * WaveMessageEmbedder::getStegoData(unsigned int bitsPerSample,unsigned int noOfBytesToAverage)
 {
     lsb_bits = bitsPerSample;
-	unsigned int i;
+	//unsigned int i;
 	int net = cByteCount / noOfBytesToAverage;
 	net = net * noOfBytesToAverage;
 	cout << " condition in embed loop : " << (current * 2 < net && message.size() > 0);
@@ -399,7 +400,7 @@ void WaveMessageEmbedder::print()
 
 }
 
-static const unsigned int COVERSZ = 64;
+/*static const unsigned int COVERSZ = 64;
 static const unsigned int MSZ = 26;
 static const unsigned int SAMPLES = 1;
 static const unsigned int BITS = 8;
@@ -427,4 +428,4 @@ int main()
 
 
     return 0;
-}
+}*/
