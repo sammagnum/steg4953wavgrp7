@@ -18,7 +18,7 @@
 using namespace std;
 
 
-
+/* Default Parameters */
 int BITS = 2;
 int SAMPLE_TO_AVG = 4;
 bool XTRACT = false;
@@ -27,31 +27,6 @@ bool M_ADDED = false;
 string COVER_OR_STEGO;
 string MESSAGE;
 
-
-
-
-#define dprint(e) printf(#e " = %d, ", (e))
-
-//WAVEFORMATEX *pHeader;
-//int parseMessage(BYTE *);
-
-/*  parseMessage()
- *  argument: null terminated char *
- *  returns: vector of Bitwise Characters
- */
-
-/* vector<BitWiseChar> parseMessage(char * m){
-    vector<BitWiseChar> v;
-    BitWiseChar t;
-    while(*m != '\0'){
-        t.setChar(*m);
-        v.insert(v.end(),t );
-        m++;
-    }
-    return v;
-
-
-}   */
 int twoBytes2Long(BYTE low , BYTE high){
     return (long long)(short)(high << 8) + low;
 }
@@ -161,13 +136,13 @@ void getoperations(int argc,char ** argv){
 				cout<< "Can't have your cake and eat it too: -e -x non-compatible and required" << endl;
 				exit(-1);
 		   }
-		    if (BITS > 8 || BITS  < 1){
-				cout << "Bits out of range: 1 - 8 " << endl;
+		    if (BITS > 15 || BITS  < 1){
+				cout << "Bits out of range: 1 - 15 " << endl;
 				exit(-1);
 			}	
-		dprint(EMBED);dprint(XTRACT);dprint(BITS);dprint(SAMPLE_TO_AVG);
-		cout << COVER_OR_STEGO << " is main file." << endl;
-		cout << MESSAGE << " is message file." << endl;
+	
+		cout << endl << COVER_OR_STEGO << " is primary file.\n" << endl;
+		cout << MESSAGE << " is message file.";
 
 		//printf ("EMBED = %d, XTRACT = %d, BITS = %d, SAMPLE_TO_AVG = %d\n",
 			   //EMBED, , cvalue);
@@ -206,7 +181,7 @@ int main(int argc, char ** argv)
 		system("pause");exit(-1);
 	}
 
-	printf("Successfully opened file %s\n", argv[1]);
+	
 
 	// pChunk[0] is the chunk representing the file header
 	x = readChunkHeader(fptr, &chunk[0]);
@@ -360,11 +335,11 @@ int main(int argc, char ** argv)
         file.close();
 
 
-        cout << "the message file content is in memory" << endl;
+        
 
 
     }
-    else cout << "no message included";
+    
     /* code quote ends here */
 
 
@@ -374,16 +349,17 @@ int main(int argc, char ** argv)
    //
 	if(EMBED)
 	{
-	cout << "embedding" << b_message << endl;
+	
 	WaveMessageEmbedder w (b_message,size,start,dataChunkSize);
+	
 	start = w.getStegoData(BITS,SAMPLE_TO_AVG);
-	//BYTE * out = w.getExtractedData(2,4);
-    //cout << out;
+	
 
 	
-    ofstream outfile ("eggo.wav", ios::out | ios::trunc | ios::binary);
-	//cout<< "data size: " << chunk[dataFlag].chunkSize << endl;
-	//cout << "format flag: " << formatFlag << "data flag: " << dataFlag << endl ;
+    ofstream outfile ("stegoFile.wav", ios::out | ios::trunc | ios::binary);
+	
+	cout<< " \nwriting to stegoFile.wav" << endl;
+	
 
 
 
@@ -396,12 +372,12 @@ int main(int argc, char ** argv)
         outfile.write((char *)&chunk[dataFlag],8);
 	    outfile.write((char *)start,chunk[dataFlag].chunkSize); //new data
     }
-	//cout << outfile.tellp() << " is the current position of the file pointer.\n";
+	
     outfile.close();
 	}
 	if(XTRACT)
 	{
-		//b_message = "";
+	
 		WaveMessageEmbedder w (b_message,0,start,dataChunkSize);
 		BYTE * out = w.getExtractedData(BITS,SAMPLE_TO_AVG);
 		if (!M_ADDED)
@@ -411,42 +387,11 @@ int main(int argc, char ** argv)
 		if(outfile.is_open()){
 			outfile.write((char *)out,w.getExtractedSize());
 		}
+		cout << "Message sucessfully written to: " << MESSAGE;
 		outfile.close();
 	
 	}
-   /* rewind(fptr);
-    cnt = 0;
-    if(outfile.is_open()){
-        while(cnt < MAX_CHUNKS)
-		{
-            x = readChunkHeader(fptr, &chunk[cnt]);
-
-
-			if(x == FAILURE)
-            {
-                 system("pause");
-                 exit(-1);
-            }
-            outfile.write(
-           	if(memcmp( &(chunk[cnt].chunkID), "data", 4) == 0)
-			{
-				dataFlag = cnt;	// found data chunk
-				break;
-			}
-			// read in chunk data
-			pChunkData[cnt] = readChunkData(fptr, chunk[cnt].chunkSize);
-			if(pChunkData[cnt] == NULL)
-            {
-                system("pause");
-                exit(-1);
-            }
-
-
-
-			cnt++;
-		}
-
-    }*/
+   
 
 
 

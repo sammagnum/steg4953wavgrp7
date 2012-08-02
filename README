@@ -1,0 +1,6 @@
+main.bin is the executable
+ for arguments there must exist either a -e coverfile or -x stegofile
+ -m either contains the message to embed or the file to place the extracted  message in -b expresses the number of bits to embed 1 - 15
+ -s designates the number of samples averaged
+ -b default is 2 and -s default is 4
+ stegoFile.wav is output as the stego-file
