@@ -2,3 +2,5 @@
 *.wav
 *.out
 core
+*.bin
+*.bmp
