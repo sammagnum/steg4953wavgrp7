@@ -328,7 +328,7 @@ BYTE * WaveMessageEmbedder::getStegoData(unsigned int bitsPerSample,unsigned int
 	//pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
     while( current * 2 < net && !message.empty() )
 	{
-		pthread_create(&threads[t], &attr, &embed_helper,this);
+		if(!(pthread_create(&threads[t], &attr, &embed_helper,this)))
         //t.push_back(std::thread (embed));
 		t++;
 		
@@ -340,9 +340,9 @@ BYTE * WaveMessageEmbedder::getStegoData(unsigned int bitsPerSample,unsigned int
 	pthread_attr_destroy(&attr);
  	
 	/* Wait on the other threads */
-	for(i=0;  i < (sizeof threads / sizeof threads[0]); i++)
+	for(i=0;  i < t; i++)
 	{
-		  pthread_join(threads[i], &status);
+		  pthread_join(threads[i], NULL);
 	}
 	BYTE * bCover = new BYTE [cByteCount]();
     convertCoverToBYTE(bCover);
