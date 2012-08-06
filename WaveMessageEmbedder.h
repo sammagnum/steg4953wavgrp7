@@ -10,6 +10,8 @@
 #include <stdlib.h>
 #include <time.h>
 #include <iomanip>
+#include <pthread.h>
+#include <algorithm>
 
 
 
@@ -18,6 +20,14 @@ typedef unsigned char BYTE;
 typedef unsigned long DWORD;
 typedef unsigned short WORD;
 
+#ifndef max
+	#define max( a, b ) ( ((a) > (b)) ? (a) : (b) )
+#endif
+
+#ifndef min
+	#define min( a, b ) ( ((a) < (b)) ? (a) : (b) )
+#endif
+
 class WaveMessageEmbedder
 {
 private:
@@ -25,14 +35,16 @@ private:
     unsigned short * cover;
 	
     unsigned int lsb_bits;
+	unsigned int n_bytes;
 	void convertCoverToBYTE(BYTE  * bCover);
     //std::vector<BYTE> extractm;
     DWORD mByteCount;
     DWORD cByteCount;
-    long long current;
-    long long currentbits;
+	unsigned long long current;
+	pthread_mutex_t mutexembed;
+    unsigned long long currentbits;
     //std::vector<int> sampleVector;
-    void embed(unsigned int b,unsigned int n);
+    
 	void prependSize(unsigned int size);
 	void extractSize();
     void setMessageByte(BYTE val);
@@ -52,6 +64,7 @@ public:
 
 
     //insert overloaded constructor with cover only for extraction
+	void * embed();
     WaveMessageEmbedder(char * message,unsigned int messageSize, unsigned char * cover, unsigned long coverSize);
     virtual ~WaveMessageEmbedder();
 	unsigned int getExtractedSize();

@@ -13,7 +13,9 @@
 #include <stdlib.h>
 #include <time.h>
 #include <fstream>
-#include<string.h>
+#include <string.h>
+#include <unistd.h>
+
 
 using namespace std;
 
@@ -157,8 +159,8 @@ int main(int argc, char ** argv)
 {
 	getoperations(argc,argv);
 	FILE *fptr;
-	DWORD fileSize;
-	int x, cnt, dataFlag, formatFlag, noSampleFrames;
+    //DWORD fileSize;
+	int x, cnt, dataFlag, /*formatFlag*/ noSampleFrames;
 	W_CHUNK chunk[MAX_CHUNKS];		// assuming max of 8 chunks, should only be 3 for you
 	BYTE *pChunkData[MAX_CHUNKS];
 	W_FORMAT format;		// only 1 format chunk
@@ -196,7 +198,7 @@ int main(int argc, char ** argv)
 		printf("\n\nError, file is NOT a RIFF file!\n\n");
 		system("pause");exit(-1);
 	}
-	fileSize = chunk[0].chunkSize + 8;
+	//fileSize = chunk[0].chunkSize + 8;
 
 	// check to make sure it is a wave file
 	pChunkData[0] = readChunkData(fptr, 4);
@@ -210,7 +212,7 @@ int main(int argc, char ** argv)
 	// chunk[1] should be format chunk, but if not, skip
 	cnt = 1;
 	dataFlag = -1;
-	formatFlag = -1;
+	//formatFlag = -1;
 
 	while(cnt < MAX_CHUNKS)
 	{
@@ -233,7 +235,7 @@ int main(int argc, char ** argv)
 
 		if(memcmp( &(chunk[cnt].chunkID), "fmt ", 4) == 0)
 		{
-			formatFlag = cnt;	//	marks which chunk has format data
+			//formatFlag = cnt;	//	marks which chunk has format data
 			break;	// found format chunk
 		}
 

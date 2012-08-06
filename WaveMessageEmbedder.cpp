@@ -6,6 +6,7 @@ using std::cout;
 using std::endl;
 using std::string;
 
+
 WaveMessageEmbedder::WaveMessageEmbedder(char * m, unsigned int mSize, unsigned char * c, unsigned long cSize)
 {
     unsigned int cnt;
@@ -34,6 +35,7 @@ WaveMessageEmbedder::~WaveMessageEmbedder()
 {
 
     delete [] cover;
+    
 }
 
 void WaveMessageEmbedder::prependSize(unsigned int size)
@@ -173,10 +175,11 @@ unsigned int WaveMessageEmbedder::getlsb(unsigned int b,unsigned int value)
 
 
 
-void WaveMessageEmbedder::embed(unsigned int b,unsigned int n)
+void * WaveMessageEmbedder::embed()
 {
-    
-
+    //cout << current ;
+	unsigned int b = lsb_bits;
+	unsigned int n = n_bytes;
     unsigned int changeSample = 0;
 	unsigned int token;
 	unsigned int average_lsb = getlsb(b,averageNLeftSamples(n));
@@ -184,6 +187,7 @@ void WaveMessageEmbedder::embed(unsigned int b,unsigned int n)
     unsigned int num,max;
 	bool first_time = true;
 	// get b bits from message
+	pthread_mutex_lock (&mutexembed);
 	if(message.size() > b)
 	{
 		token = getNbitsFromMessage(b);
@@ -194,28 +198,31 @@ void WaveMessageEmbedder::embed(unsigned int b,unsigned int n)
 		token = getNbitsFromMessage(i);
 		token = token << (b-i);
 	}
-
+	int c = current;
+	
+	
+	pthread_mutex_unlock (&mutexembed);
     max = (unsigned int) pow(2,b) - 1;
 
     while(average_lsb != token)
     {
         while(changeSample < n)
 		{		
-			num = getlsb(b,cover[current + changeSample * 2]);
+			num = getlsb(b,cover[c + changeSample * 2]);
 						
 			if(first_time == true)
 			{
 			   // sets all samples involved to zero
-			   cover[current + changeSample * 2] -= num;
+			   cover[c + changeSample * 2] -= num;
 			   if (changeSample == n -1)
 					first_time = false;
 			}
 			else
 			{
 				if (num == max)
-					cover[current + changeSample * 2] -= max;
+					cover[c + changeSample * 2] -= max;
 				else
-					cover[current + changeSample * 2]++;
+					cover[c + changeSample * 2]++;
 			}
 			average_lsb = getlsb(b,averageNLeftSamples(n));
 			if (average_lsb == token)
@@ -245,21 +252,21 @@ void WaveMessageEmbedder::embed(unsigned int b,unsigned int n)
     {
         while(changeSample < n)
 		{		
-			num = getlsb(b,cover[current + 1 + changeSample * 2]);
+			num = getlsb(b,cover[c + 1 + changeSample * 2]);
 						
 			if(first_time == true)
 			{
 			   // sets all samples involved to zero
-			   cover[current + 1 + changeSample * 2] -= num;
+			   cover[c + 1 + changeSample * 2] -= num;
 			   if (changeSample == n -1)
 					first_time = false;
 			}
 			else
 			{
 				if (num == max)
-					cover[current + 1 + changeSample * 2] -= max;
+					cover[c + 1 + changeSample * 2] -= max;
 				else
-					cover[current + 1 + changeSample * 2]++;
+					cover[c + 1 + changeSample * 2]++;
 			}
 			average_rsb = getlsb(b,averageNRightSamples(n));
 			if (average_rsb == token)
@@ -271,37 +278,81 @@ void WaveMessageEmbedder::embed(unsigned int b,unsigned int n)
      
 	
 	
-    current += n << 1;
-	static int count = 0;
-	count += 2;
-	
-	float f = ((b*count)/(float)currentbits);
-	float g = (current << 1)/(float)(cByteCount);
-	
-	printProgBar(f*100,g*100);
+    
 
-	
+pthread_exit((void*) 0);	
 	
 	
 	
     
 }
 
+// void do_join(std::thread& t)
+// {
+//     t.join();
+// }
+// 
+// void join_all(std::vector<std::thread>& v)
+// {
+//     for_each(v.begin(),v.end(),do_join);
+// }
+
+static void * embed_helper(void *context)
+{
+        return ((WaveMessageEmbedder *)context)->embed();
+}
+
 BYTE * WaveMessageEmbedder::getStegoData(unsigned int bitsPerSample,unsigned int noOfBytesToAverage)
 {
-    lsb_bits = bitsPerSample;
-	currentbits = (mByteCount << 3) + 32 ;
-	int net = cByteCount / noOfBytesToAverage;
+	unsigned int net = cByteCount / noOfBytesToAverage;
 	net = net * noOfBytesToAverage;
+	unsigned int msize = (message.size()/bitsPerSample)/2 + 1;
+	unsigned int t = 0, i=0;
+	
+	unsigned int size = min(net,msize);
+	pthread_t threads[size];
+	pthread_attr_t attr;
+
+	void *status;
+   
+	pthread_attr_init(&attr);
+	pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
+   
+    lsb_bits = bitsPerSample;
+	n_bytes = noOfBytesToAverage;
+	currentbits = (mByteCount << 3) + 32 ;
+	
 	cout << "Embedding Data...\n\nPercentage of Message Embedded       Percentage of Cover used" << endl;
+	pthread_mutex_init(&mutexembed, NULL);
+	//pthread_attr_init(&attr);
+	//pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
     while( current * 2 < net && !message.empty() )
-        embed(bitsPerSample,noOfBytesToAverage);
+	{
+		pthread_create(&threads[t], &attr, &embed_helper,this);
+        //t.push_back(std::thread (embed));
+		t++;
+		
+		current += noOfBytesToAverage << 1;
+		float f = ((bitsPerSample*current/noOfBytesToAverage)/(float)currentbits);
+		float g = (current << 1)/(float)(cByteCount);
+		printProgBar(f*100,g*100);
+	}
+	pthread_attr_destroy(&attr);
+ 	
+	/* Wait on the other threads */
+	for(i=0;  i < (sizeof threads / sizeof threads[0]); i++)
+	{
+		  pthread_join(threads[i], &status);
+	}
 	BYTE * bCover = new BYTE [cByteCount]();
     convertCoverToBYTE(bCover);
+	pthread_mutex_destroy(&mutexembed);
+	   //pthread_exit(NULL);
 	
 	
 	return bCover;
 }
+
 
 
 void WaveMessageEmbedder::convertCoverToBYTE(BYTE  * bCover)
