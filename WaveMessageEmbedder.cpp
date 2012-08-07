@@ -327,7 +327,7 @@ BYTE * WaveMessageEmbedder::getStegoData(unsigned int bitsPerSample,unsigned int
 	//pthread_attr_init(&attr);
 	//pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
     while( current * 2 < net && !message.empty() )
-	{
+	{gi
 		if(!(pthread_create(&threads[t], &attr, &embed_helper,this)))
         //t.push_back(std::thread (embed));
 		t++;
