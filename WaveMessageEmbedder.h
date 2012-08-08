@@ -11,7 +11,9 @@
 #include <time.h>
 #include <iomanip>
 #include <pthread.h>
+#include <semaphore.h>
 #include <algorithm>
+#include <queue>
 
 
 
@@ -19,6 +21,7 @@
 typedef unsigned char BYTE;
 typedef unsigned long DWORD;
 typedef unsigned short WORD;
+	static const unsigned int TMAX = 30;
 
 #ifndef max
 	#define max( a, b ) ( ((a) > (b)) ? (a) : (b) )
@@ -31,6 +34,8 @@ typedef unsigned short WORD;
 class WaveMessageEmbedder
 {
 private:
+	
+	std::queue<pthread_t> garbage;
     std::vector<char> message;
     unsigned short * cover;
 	
@@ -50,11 +55,11 @@ private:
     void setMessageByte(BYTE val);
 	
     void setCoverByte(BYTE val,BYTE hival,unsigned int cnt);
-    unsigned int averageNLeftSamples(unsigned int n);
+    unsigned int averageNLeftSamples(unsigned int n,unsigned long long c);
     unsigned int getlsb(unsigned int b,unsigned int value);
     unsigned int getNbitsFromMessage(unsigned int n);
    // int averageNLeftSamples(int n);
-    unsigned int averageNRightSamples(unsigned int n);
+    unsigned int averageNRightSamples(unsigned int n, unsigned long long c);
     void extract(unsigned int b,unsigned int n);
 
 
@@ -65,6 +70,7 @@ public:
 
     //insert overloaded constructor with cover only for extraction
 	void * embed();
+	sem_t sem;
     WaveMessageEmbedder(char * message,unsigned int messageSize, unsigned char * cover, unsigned long coverSize);
     virtual ~WaveMessageEmbedder();
 	unsigned int getExtractedSize();
